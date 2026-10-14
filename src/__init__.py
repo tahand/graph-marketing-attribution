@@ -11,3 +11,7 @@ modelled as nodes (Customer, Campaign, Channel, Conversion) and edges
 """
 
 __version__ = "1.0.0"
+
+# All monetary values (rewards, revenue, costs) are in British pounds.
+CURRENCY_CODE = "GBP"
+CURRENCY_SYMBOL = "£"

@@ -42,7 +42,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--customers", type=int, default=500, help="customers to simulate (default 500)")
     parser.add_argument("--gamma", type=float, default=0.85, help="daily discount factor (default 0.85)")
-    parser.add_argument("--base-reward", type=float, default=100.0, help="reward per conversion (default 100)")
+    parser.add_argument("--base-reward", type=float, default=100.0, help="reward per conversion in GBP (default 100)")
     parser.add_argument("--seed", type=int, default=42, help="RNG seed; use -1 for a random run")
     parser.add_argument("--db", type=Path, default=ROOT / "marketing_graph.db", help="SQLite file path")
     parser.add_argument("--output", type=Path, default=ROOT / "output", help="folder for PNG charts")
@@ -53,13 +53,15 @@ def print_summary(comparison, top_paths, gamma: float) -> None:
     """Print the campaign comparison table and the most common paths."""
     from tabulate import tabulate
 
+    from src import CURRENCY_SYMBOL
+
     rows = [
         [
             r.campaign,
             r.total_conversions,
             f"{r.avg_latency_days:.2f}",
-            f"${r.last_touch_revenue:,.2f}",
-            f"${r.markov_revenue:,.2f}",
+            f"{CURRENCY_SYMBOL}{r.last_touch_revenue:,.2f}",
+            f"{CURRENCY_SYMBOL}{r.markov_revenue:,.2f}",
             f"{(r.markov_share - r.last_touch_share) * 100:+.1f} pp",
         ]
         for r in comparison.itertuples(index=False)
@@ -68,16 +70,16 @@ def print_summary(comparison, top_paths, gamma: float) -> None:
         "TOTAL",
         "",
         "",
-        f"${comparison['last_touch_revenue'].sum():,.2f}",
-        f"${comparison['markov_revenue'].sum():,.2f}",
+        f"{CURRENCY_SYMBOL}{comparison['last_touch_revenue'].sum():,.2f}",
+        f"{CURRENCY_SYMBOL}{comparison['markov_revenue'].sum():,.2f}",
         "",
     ])
     headers = [
         "Campaign Name",
         "Total Conversions",
         "Avg Latency (Days)",
-        "Last-Touch Revenue",
-        f"Markov Velocity-Adj. Revenue (γ={gamma:g})",
+        "Last-Touch Revenue (GBP)",
+        f"Markov Velocity-Adj. Revenue (GBP, γ={gamma:g})",
         "Share Shift",
     ]
     print(tabulate(rows, headers=headers, tablefmt="rounded_outline",

@@ -18,6 +18,7 @@ import random
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 
+from . import CURRENCY_CODE
 from .database import GraphDatabase
 
 TIMESTAMP_FORMAT = "%Y-%m-%dT%H:%M:%S"
@@ -35,6 +36,7 @@ CHANNELS: dict[str, dict[str, str]] = {
 # stage: 0.0 = top-of-funnel awareness, 1.0 = bottom-of-funnel closer.
 # view_prob: probability a touch is a passive VIEW rather than a CLICK.
 # popularity: relative reach of the campaign.
+# cost_per_touch: media cost per impression/click in GBP.
 CAMPAIGNS: dict[str, dict] = {
     "LinkedIn_Video_Ad": {
         "channel_id": "channel:social", "stage": 0.10, "view_prob": 0.70,
@@ -154,6 +156,7 @@ def generate_dataset(
             "channel_id": cfg["channel_id"],
             "funnel_stage": cfg["stage"],
             "cost_per_touch": cfg["cost_per_touch"],
+            "currency": CURRENCY_CODE,
         }))
 
     touch_counts = list(TOUCH_COUNT_WEIGHTS)
@@ -195,6 +198,7 @@ def generate_dataset(
                 "channel_id": cfg["channel_id"],
                 "touch_index": idx + 1,
                 "cost": cfg["cost_per_touch"],
+                "currency": CURRENCY_CODE,
             }))
             summary.touchpoints += 1
 

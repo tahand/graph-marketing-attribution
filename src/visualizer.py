@@ -6,7 +6,9 @@ they wrote, so they work on servers and in CI without a display.
 
 from __future__ import annotations
 
+import io
 import math
+import time
 from pathlib import Path
 
 import matplotlib
@@ -16,6 +18,8 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 import networkx as nx  # noqa: E402
 import pandas as pd  # noqa: E402
+
+from . import CURRENCY_SYMBOL  # noqa: E402
 
 DEFAULT_OUTPUT_DIR = Path("output")
 
@@ -45,8 +49,19 @@ def _style_axes(ax: plt.Axes) -> None:
 def _save(fig: plt.Figure, path: Path) -> Path:
     """Save ``fig`` to ``path`` (creating parent dirs) and close it."""
     path.parent.mkdir(parents=True, exist_ok=True)
-    fig.savefig(path, dpi=150, bbox_inches="tight", facecolor=SURFACE)
+    buffer = io.BytesIO()
+    fig.savefig(buffer, format="png", dpi=150, bbox_inches="tight", facecolor=SURFACE)
     plt.close(fig)
+    # On Windows an image viewer or IDE preview can briefly lock the old PNG,
+    # so retry the write a few times before giving up.
+    for attempt in range(5):
+        try:
+            path.write_bytes(buffer.getvalue())
+            return path
+        except OSError:
+            if attempt == 4:
+                raise
+            time.sleep(0.3 * (attempt + 1))
     return path
 
 
@@ -166,13 +181,13 @@ def plot_attribution_comparison(
     mk = ax.bar([i + bar_w / 2 + 0.01 for i in x], df["markov_revenue"], bar_w,
                 label="Markov velocity-adjusted revenue", color=SERIES_2)
     for bars in (lt, mk):
-        ax.bar_label(bars, labels=[f"${v:,.0f}" for v in bars.datavalues], padding=3,
+        ax.bar_label(bars, labels=[f"{CURRENCY_SYMBOL}{v:,.0f}" for v in bars.datavalues], padding=3,
                      fontsize=8, color=TEXT_SECONDARY)
 
     ax.set_xticks(list(x))
     ax.set_xticklabels([c.replace("_", " ") for c in campaigns], color=TEXT_PRIMARY)
-    ax.set_ylabel("Attributed revenue ($)", color=TEXT_SECONDARY)
-    ax.yaxis.set_major_formatter(matplotlib.ticker.StrMethodFormatter("${x:,.0f}"))
+    ax.set_ylabel(f"Attributed revenue ({CURRENCY_SYMBOL})", color=TEXT_SECONDARY)
+    ax.yaxis.set_major_formatter(matplotlib.ticker.StrMethodFormatter(CURRENCY_SYMBOL + "{x:,.0f}"))
     ax.set_title("Last-Touch vs. Discounted Markov attribution by campaign",
                  color=TEXT_PRIMARY, fontsize=13, loc="left")
     ax.legend(frameon=False, labelcolor=TEXT_PRIMARY, loc="upper right")
@@ -203,7 +218,7 @@ def plot_time_decay_curve(
             ax.plot([d], [r], "o", markersize=8, color=SERIES_2, markeredgecolor=SURFACE,
                     markeredgewidth=2)
             at_edge = d >= days * 0.9
-            ax.annotate(f"day {d}: {r:.1f}", (d, r), textcoords="offset points",
+            ax.annotate(f"day {d}: {CURRENCY_SYMBOL}{r:.1f}", (d, r), textcoords="offset points",
                         xytext=(-8 if at_edge else 8, 10), ha="right" if at_edge else "left",
                         fontsize=9, color=TEXT_PRIMARY)
 
@@ -218,7 +233,7 @@ def plot_time_decay_curve(
     ax.set_xlim(0, days + 0.5)
     ax.set_ylim(0, base_reward * 1.05)
     ax.set_xlabel("Latency Δt between touch and conversion (days)", color=TEXT_SECONDARY)
-    ax.set_ylabel("Reward per touch", color=TEXT_SECONDARY)
-    ax.set_title(f"Exponential time decay: Reward = {base_reward:g} × {gamma:g}^Δt",
+    ax.set_ylabel(f"Reward per touch ({CURRENCY_SYMBOL})", color=TEXT_SECONDARY)
+    ax.set_title(f"Exponential time decay: Reward = {CURRENCY_SYMBOL}{base_reward:g} × {gamma:g}^Δt",
                  color=TEXT_PRIMARY, fontsize=13, loc="left")
     return _save(fig, output_dir / filename)

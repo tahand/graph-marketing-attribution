@@ -14,6 +14,7 @@ All path traversal and latency maths runs inside SQLite:
 Both models therefore value a conversion at ``Base_Reward``; the Markov model
 spreads (and time-discounts) that value over every touch in the path, so slow,
 lagging journeys earn less "velocity-adjusted" revenue than fast ones.
+All monetary values are in British pounds (GBP, £).
 """
 
 from __future__ import annotations

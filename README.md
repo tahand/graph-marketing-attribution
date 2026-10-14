@@ -9,7 +9,7 @@ It runs locally with no servers or paid services. Customer journeys are stored a
 | **Last-Touch** | The final touch before a conversion gets the full `Base_Reward`. |
 | **Discounted Markov (velocity-adjusted)** | Every touch on the path earns `Base_Reward × γ^Δt`, where `Δt` is the number of days between that touch and the conversion. |
 
-The defaults are `γ = 0.85` and `Base_Reward = 100.0`. That gives a half-life of about 4.3 days: a touch one day before a conversion earns 85, a touch one week before earns 32, and a touch a month before earns less than 1.
+All monetary values are in British pounds (GBP, £). The defaults are `γ = 0.85` and `Base_Reward = £100.00`. That gives a half-life of about 4.3 days: a touch one day before a conversion earns £85, a touch one week before earns £32, and a touch a month before earns less than £1.
 
 ## Quick start
 
@@ -31,7 +31,7 @@ The demo:
 ### Options
 
 ```
-python run_demo.py --customers 2000 --gamma 0.9 --base-reward 250 --seed 7
+python run_demo.py --customers 2000 --gamma 0.9 --base-reward 250 --seed 7   # £250 per conversion
 python run_demo.py --seed -1          # different random data every run
 python run_demo.py --db other.db --output charts/
 ```
@@ -105,7 +105,7 @@ Each model's total differs. Last-Touch credits exactly one touch per conversion.
 |---|---|
 | `output/customer_journey_graph.png` | A NetworkX directed graph of the top 15 converting paths (Start → campaigns → Conversion), with edge width scaled to journey count. |
 | `output/attribution_comparison.png` | Last-Touch vs. Markov revenue for each campaign. |
-| `output/time_decay_curve.png` | The decay curve `100 × 0.85^Δt` over 30 days, with the half-life marked. |
+| `output/time_decay_curve.png` | The decay curve `£100 × 0.85^Δt` over 30 days, with the half-life marked. |
 
 ## Project layout
 
